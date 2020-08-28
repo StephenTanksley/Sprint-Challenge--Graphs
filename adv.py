@@ -25,9 +25,6 @@ world.print_rooms()
 
 player = Player(world.starting_room)
 
-# Fill this out with directions to walk
-# traversal_path = ['n', 'n']
-traversal_path = []
 
 """
     PROBLEM: 
@@ -43,8 +40,8 @@ traversal_path = []
             1a) First, I grab the room's id and use that to populate the world.rooms[current_room_id] table.
             
         2) When there's a dead end, I need to find a previous cell which has not been explored.
-            2a) I think I can do this by writing a 
         3) I'll need to keep track of the directions back to a node where there are unexplored nodes.
+            3a) I think I can do this by writing a list that will contain instructions for how to get back to where I started.
         
         4) When I move into a new room, there are a few items I can populate on my graph. 
             4a) I've already filled in in the rooms which are connected to the room I'm in (player.current_room.get_exits())'
@@ -54,6 +51,21 @@ traversal_path = []
             4e) Once I get back to that node, I can pick one of the unexplored directions and go explore it.
 
 """
+
+# Fill this out with directions to walk
+# traversal_path = ['n', 'n']
+
+traversal_path = []
+
+
+def map_maze(player):
+
+    # Standard graph traversal. Set up something to track visited nodes.
+    visited = set()
+
+    #
+    backtrack = []
+
 
 print(player.current_room.id)
 player.current_room.get_exits()
