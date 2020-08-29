@@ -61,17 +61,7 @@ traversal_path = []
 def map_maze(player):
 
     # Standard graph traversal. Set up something to track visited nodes.
-    # visited = set()
-
-    # visited should look like this:
-
-    # visited = {
-    #    3: {
-    # 'e': '?',
-    # 'n': '30',
-    #   }
-    # }
-    visited = {}
+    visited = set()
 
     # Creating a list for keeping track of where I am and how to get back to where I need to be.
     backtrack = []
@@ -91,26 +81,18 @@ def map_maze(player):
         # We need to know what room we're currently in.
         current_room = player.current_room
 
-        # THIS IS MY CURRENT IMPLEMENTATION THAT MIGHT NOT WORK.
-        # We need to mark that room as visited.
-        if current_room not in visited:
-            visited[current_room] = {}
-
         # We need to know the exits in this current room.
         exits = current_room.get_exits()
 
-        for direction in exits:
-            visited[current_room] = {
-                direction: "?"
-            }
-
         # We want to know the rooms that still remain unexplored.
         unexplored_rooms = [direction for direction in exits if current_room.get_room_in_direction(
-            direction) not in visited.keys()]
+            direction) not in visited]
+
+        visited.add(current_room)
 
         if unexplored_rooms:
 
-            # Picking a random direction to go from our list of unexplored rooms.
+            # Picking a direction to go from our list of unexplored rooms.
             random_direction = unexplored_rooms[random.randint(
                 0, len(unexplored_rooms) - 1)]
 
