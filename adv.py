@@ -10,11 +10,11 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
+# map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -49,12 +49,15 @@ player = Player(world.starting_room)
             4c) The more rooms I visit, the more I'm going to get filled out in my graph.
             4d) The problem arises when I have to backtrack. I'll need to keep a stack of references to the last node with an unexplored path. Ideally, I'll also be keeping the shortest path back to that node too.
             4e) Once I get back to that node, I can pick one of the unexplored directions and go explore it.
+            
+        5) This should get me a solid implementation of this maze. I'm thinking that I can optimize this process though. If I use a combination of depth first search and breadth-first search, I can get the shortest route back to a 
 
 """
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
 
+# This is what I need to return at the end.
 traversal_path = []
 
 
@@ -88,14 +91,17 @@ def map_maze(player):
         unexplored_rooms = [direction for direction in exits if current_room.get_room_in_direction(
             direction) not in visited]
 
+        # Have to make sure that we add the current room to our visited list so we can weed out duplicates.
         visited.add(current_room)
 
+        # If we have rooms that aren't explored yet:
         if unexplored_rooms:
 
-            # Picking a direction to go from our list of unexplored rooms.
+            # We pick a direction to go from our list of unexplored rooms.
             random_direction = unexplored_rooms[random.randint(
                 0, len(unexplored_rooms) - 1)]
 
+            # We go in that direction and we add items to our backtrack patah and our traversal path.
             player.travel(random_direction)
             backtrack.append(random_direction)
             traversal_path.append(random_direction)
@@ -103,13 +109,17 @@ def map_maze(player):
         else:
 
             # If I get stuck, I need to backtrack. I'll start pulling the items from my backtrack list.
+            # Once we get back to a node that has unexplored rooms, we'll leave this loop.
+
+            # Here we're popping items off of the backtrack list starting from the end.
             reverse_input = backtrack.pop(-1)
 
             # We plug reversed_direction into our reverse dict to get the direction we need to go in.
             reverse_output = reverse[reverse_input]
+
+            # We then add the reverse_output to the player.travel() method in order to go back the way we came.
             player.travel(reverse_output)
             traversal_path.append(reverse_output)
-    print(visited)
 
     return traversal_path
 
