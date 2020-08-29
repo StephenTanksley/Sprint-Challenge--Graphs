@@ -38,7 +38,7 @@ player = Player(world.starting_room)
     
         1) I know I need to populate a list of directions that are available to me at each room in the maze.
             1a) First, I grab the room's id and use that to populate the world.rooms[current_room_id] table.
-            
+        
         2) When there's a dead end, I need to find a previous cell which has not been explored.
         3) I'll need to keep track of the directions back to a node where there are unexplored nodes.
             3a) I think I can do this by writing a list that will contain instructions for how to get back to where I started.
