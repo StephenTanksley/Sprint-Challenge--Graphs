@@ -63,14 +63,6 @@ def map_maze(player):
     # Standard graph traversal. Set up something to track visited nodes.
     # visited = set()
 
-    # visited should look like this:
-
-    # visited = {
-    #    3: {
-    # 'e': '?',
-    # 'n': '30',
-    #   }
-    # }
     visited = {}
 
     # Creating a list for keeping track of where I am and how to get back to where I need to be.
@@ -91,7 +83,12 @@ def map_maze(player):
         # We need to know what room we're currently in.
         current_room = player.current_room
 
+        # # We can use prev_room to keep track of the room we just came from. We'll update this one behind the current_room variable.
+        # prev_room = current_room
+
+        print("this is the current room: ", current_room.id)
         # THIS IS MY CURRENT IMPLEMENTATION THAT MIGHT NOT WORK.
+
         # We need to mark that room as visited.
         if current_room not in visited:
             visited[current_room] = {}
@@ -99,10 +96,15 @@ def map_maze(player):
         # We need to know the exits in this current room.
         exits = current_room.get_exits()
 
+        # for each item in exits
         for direction in exits:
-            visited[current_room] = {
-                direction: "?"
-            }
+
+            # If the direction doesn't exist in our current dictionary's list of current rooms, we should add it.
+            if direction not in visited[current_room]:
+                visited[current_room].update({direction: "?"})
+
+        print("visited keys: ", visited[current_room].items())
+        print("visited keys: ", visited[current_room].items())
 
         # We want to know the rooms that still remain unexplored.
         unexplored_rooms = [direction for direction in exits if current_room.get_room_in_direction(
@@ -127,7 +129,8 @@ def map_maze(player):
             reverse_output = reverse[reverse_input]
             player.travel(reverse_output)
             traversal_path.append(reverse_output)
-    print(visited)
+
+    print("visited nodes: ", visited)
 
     return traversal_path
 
