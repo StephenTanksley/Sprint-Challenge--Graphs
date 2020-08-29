@@ -10,11 +10,11 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-# map_file = "maps/test_line.txt"
+map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-map_file = "maps/main_maze.txt"
+# map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -61,14 +61,78 @@ traversal_path = []
 def map_maze(player):
 
     # Standard graph traversal. Set up something to track visited nodes.
-    visited = set()
+    # visited = set()
 
-    #
+    # visited should look like this:
+
+    # visited = {
+    #    3: {
+    # 'e': '?',
+    # 'n': '30',
+    #   }
+    # }
+    visited = {}
+
+    # Creating a list for keeping track of where I am and how to get back to where I need to be.
     backtrack = []
 
+    # This is a dictionary for easily mapping my backtrack path.
+    reverse = {
+        "n": "s",
+        "s": "n",
+        "e": "w",
+        "w": "e"
+    }
 
-print(player.current_room.id)
-player.current_room.get_exits()
+    # I need a loop to run to explore every node. While the number of rooms in visited is less than 500, do stuff.
+
+    while len(visited) < len(world.rooms):
+
+        # We need to know what room we're currently in.
+        current_room = player.current_room
+
+        # THIS IS MY CURRENT IMPLEMENTATION THAT MIGHT NOT WORK.
+        # We need to mark that room as visited.
+        if current_room not in visited:
+            visited[current_room] = {}
+
+        # We need to know the exits in this current room.
+        exits = current_room.get_exits()
+
+        for direction in exits:
+            visited[current_room] = {
+                direction: "?"
+            }
+
+        # We want to know the rooms that still remain unexplored.
+        unexplored_rooms = [direction for direction in exits if current_room.get_room_in_direction(
+            direction) not in visited.keys()]
+
+        if unexplored_rooms:
+
+            # Picking a random direction to go from our list of unexplored rooms.
+            random_direction = unexplored_rooms[random.randint(
+                0, len(unexplored_rooms) - 1)]
+
+            player.travel(random_direction)
+            backtrack.append(random_direction)
+            traversal_path.append(random_direction)
+
+        else:
+
+            # If I get stuck, I need to backtrack. I'll start pulling the items from my backtrack list.
+            reverse_input = backtrack.pop(-1)
+
+            # We plug reversed_direction into our reverse dict to get the direction we need to go in.
+            reverse_output = reverse[reverse_input]
+            player.travel(reverse_output)
+            traversal_path.append(reverse_output)
+    print(visited)
+
+    return traversal_path
+
+
+map_maze(player)
 
 # TRAVERSAL TEST - DO NOT MODIFY
 visited_rooms = set()
