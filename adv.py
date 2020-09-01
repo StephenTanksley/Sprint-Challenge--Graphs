@@ -12,11 +12,11 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
+# map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -40,6 +40,10 @@ reverse = {
 }
 
 
+def populate_graph(player, graph):
+    pass
+
+
 def traverse(player):
 
     # I want to avoid unnecessary travel if possible, so I create a set.
@@ -54,7 +58,7 @@ def traverse(player):
     # I initiate a graph to fill out the adjacency list.
     graph = {}
 
-    # For each entry in the graph, I'm going to initialize a dictionary at that room's id.
+    # For each room, I'm going to initialize a dictionary at that room's id.
     graph[player.current_room.id] = {}
 
     # I'll populate a variable with all possible exits to that room.
@@ -68,9 +72,13 @@ def traverse(player):
     unexplored_rooms = [
         direction[0] for direction in graph[player.current_room.id].items() if direction[1] == '?']
 
+    # This is to pull an random direction from unexplored_rooms.
     direction = unexplored_rooms[random.randint(0, len(unexplored_rooms) - 1)]
 
     stack.push(direction)
+
+    # Create a reference to the previous room OUTSIDE of the while loop's scope.
+    # Once len(visited) == len(world.rooms), do the same sort of update logic we had INSIDE the scope to take care of the edge case.
 
     while len(visited) < len(world.rooms):
 
@@ -103,9 +111,9 @@ def traverse(player):
         # We first reverse the direction we came from using the reverse table above.
         reversed_direction = reverse[direction]
 
-        # Then we update the graph so our
-        graph[prev_node.id][direction] = player.current_room.id
+        # Then we update the graph so our adjacency list is up to date.
         graph[player.current_room.id][reversed_direction] = prev_node.id
+        graph[prev_node.id][direction] = player.current_room.id
 
         unexplored_rooms = [
             direction[0] for direction in graph[player.current_room.id].items() if direction[1] == '?']
@@ -116,6 +124,7 @@ def traverse(player):
             stack.push(direction)
 
         elif len(visited) == len(world.rooms):
+
             return traversal_path
 
         else:
