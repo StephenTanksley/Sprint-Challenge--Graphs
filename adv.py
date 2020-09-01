@@ -2,6 +2,8 @@ from room import Room
 from player import Player
 from world import World
 
+from utils import Stack, Queue, get_vertex_neighbors, bfs, dfs, closest_unexplored_room
+
 import random
 from ast import literal_eval
 
@@ -25,117 +27,111 @@ world.print_rooms()
 
 player = Player(world.starting_room)
 
-
-"""
-    PROBLEM: 
-        1) I need to traverse this maze. 
-        2) I need to do it in less than 960 steps  
-        3) I need to use graphs to do it. 
-            4) We've completed the maze when our adjacency list has no question marks left AND... 
-            5) The number of rooms that we've explored is equal to 500.
-    
-    SOLUTION: I'm not sure about a solution yet. I'm still discovering. Here are the things I believe I know about the problem.
-    
-        1) I know I need to populate a list of directions that are available to me at each room in the maze.
-            1a) First, I grab the room's id and use that to populate the world.rooms[current_room_id] table.
-            
-        2) When there's a dead end, I need to find a previous cell which has not been explored.
-        3) I'll need to keep track of the directions back to a node where there are unexplored nodes.
-            3a) I think I can do this by writing a list that will contain instructions for how to get back to where I started.
-        
-        4) When I move into a new room, there are a few items I can populate on my graph. 
-            4a) I've already filled in in the rooms which are connected to the room I'm in (player.current_room.get_exits())'
-            4b) I can also fill in my adjacency list by filling in the values of those pairs.
-            4c) The more rooms I visit, the more I'm going to get filled out in my graph.
-            4d) The problem arises when I have to backtrack. I'll need to keep a stack of references to the last node with an unexplored path. Ideally, I'll also be keeping the shortest path back to that node too.
-            4e) Once I get back to that node, I can pick one of the unexplored directions and go explore it.
-
-"""
-
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
 
 traversal_path = []
 
+reverse = {
+    'n': 's',
+    's': 'n',
+    'e': 'w',
+    'w': 'e'
+}
 
-def map_maze(player):
 
-    # Standard graph traversal. Set up something to track visited nodes.
-    # visited = set()
+def traverse(player):
 
-    visited = {}
+    # I want to avoid unnecessary travel if possible, so I create a set.
+    visited = set()
 
-    # Creating a list for keeping track of where I am and how to get back to where I need to be.
-    backtrack = []
+    # I add the current room to the set.
+    visited.add(player.current_room)
 
-    # This is a dictionary for easily mapping my backtrack path.
-    reverse = {
-        "n": "s",
-        "s": "n",
-        "e": "w",
-        "w": "e"
-    }
+    # I initialize a stack to keep track of which nodes are coming next.
+    stack = Stack()
 
-    # I need a loop to run to explore every node. While the number of rooms in visited is less than 500, do stuff.
+    # I initiate a graph to fill out the adjacency list.
+    graph = {}
+
+    # For each entry in the graph, I'm going to initialize a dictionary at that room's id.
+    graph[player.current_room.id] = {}
+
+    # I'll populate a variable with all possible exits to that room.
+    exits = player.current_room.get_exits()
+
+    # For each of those exits, I'll add a new entry into the graph[current_room][direction] slot. Since I don't know what's in that direction just yet, I'll just add a question mark ('?')
+    for direction in exits:
+        graph[player.current_room.id][direction] = '?'
+
+    # We use a list comprehension to map through our currently unexplored rooms and add them to our list. We only add them if they have not been marked off our adjacency list yet.
+    unexplored_rooms = [
+        direction[0] for direction in graph[player.current_room.id].items() if direction[1] == '?']
+
+    direction = unexplored_rooms[random.randint(0, len(unexplored_rooms) - 1)]
+
+    stack.push(direction)
 
     while len(visited) < len(world.rooms):
 
-        # We need to know what room we're currently in.
-        current_room = player.current_room
+        # This is going to be our first item that we use to move.
+        direction = stack.pop()
 
-        # # We can use prev_room to keep track of the room we just came from. We'll update this one behind the current_room variable.
-        # prev_room = current_room
+        # We'll need to remember where we came from to update the adjacency list.
+        prev_node = player.current_room
 
-        print("this is the current room: ", current_room.id)
-        # THIS IS MY CURRENT IMPLEMENTATION THAT MIGHT NOT WORK.
+        # Now after all that setup we finally travel somewhere.
+        player.travel(direction)
 
-        # We need to mark that room as visited.
-        if current_room not in visited:
-            visited[current_room] = {}
+        # We make a note of where we moved.
+        traversal_path.append(direction)
 
-        # We need to know the exits in this current room.
-        exits = current_room.get_exits()
+        # We make a note that we've now visited that room.
+        visited.add(player.current_room)
 
-        # for each item in exits
-        for direction in exits:
+        new_exits = player.current_room.get_exits()
 
-            # If the direction doesn't exist in our current dictionary's list of current rooms, we should add it.
-            if direction not in visited[current_room]:
-                visited[current_room].update({direction: "?"})
+        # If the new room that we're in is not already in the graph, we add it.
+        if player.current_room.id not in graph:
+            #
+            graph[player.current_room.id] = {}
 
-        print("visited keys: ", visited[current_room].items())
-        print("visited keys: ", visited[current_room].items())
+            for item in new_exits:
+                graph[player.current_room.id][item] = '?'
 
-        # We want to know the rooms that still remain unexplored.
-        unexplored_rooms = [direction for direction in exits if current_room.get_room_in_direction(
-            direction) not in visited.keys()]
+        # We can now update the graph's adjacency list.
+        # We first reverse the direction we came from using the reverse table above.
+        reversed_direction = reverse[direction]
 
-        if unexplored_rooms:
+        # Then we update the graph so our
+        graph[prev_node.id][direction] = player.current_room.id
+        graph[player.current_room.id][reversed_direction] = prev_node.id
 
-            # Picking a random direction to go from our list of unexplored rooms.
-            random_direction = unexplored_rooms[random.randint(
+        unexplored_rooms = [
+            direction[0] for direction in graph[player.current_room.id].items() if direction[1] == '?']
+
+        if len(unexplored_rooms) > 0:
+            direction = unexplored_rooms[random.randint(
                 0, len(unexplored_rooms) - 1)]
+            stack.push(direction)
 
-            player.travel(random_direction)
-            backtrack.append(random_direction)
-            traversal_path.append(random_direction)
+        elif len(visited) == len(world.rooms):
+            return traversal_path
 
         else:
+            backtrack_step = closest_unexplored_room(
+                graph, player.current_room.id)
 
-            # If I get stuck, I need to backtrack. I'll start pulling the items from my backtrack list.
-            reverse_input = backtrack.pop(-1)
-
-            # We plug reversed_direction into our reverse dict to get the direction we need to go in.
-            reverse_output = reverse[reverse_input]
-            player.travel(reverse_output)
-            traversal_path.append(reverse_output)
-
-    print("visited nodes: ", visited)
-
-    return traversal_path
+            for i in range(0, len(backtrack_step) - 1):
+                player.travel(backtrack_step[i])
+                traversal_path.append(backtrack_step[i])
+                visited.add(player.current_room)
+            stack.push(backtrack_step[-1])
+        print(graph)
 
 
-map_maze(player)
+traverse(player)
+
 
 # TRAVERSAL TEST - DO NOT MODIFY
 visited_rooms = set()
